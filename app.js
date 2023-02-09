@@ -25,9 +25,9 @@ const articleSchema = new mongoose.Schema({
 const Article = mongoose.model('Article', articleSchema);
 
 // C R U D    O P E R A T I O N S
-
-//Get all articles
-app.get('/articles', (req, res) => { 
+//All articles
+app.route('/articles')
+.get((req, res) => { 
   Article.find({}, function(err, foundArticles) {
     if(!err) {
       res.send(foundArticles);
@@ -36,22 +36,8 @@ app.get('/articles', (req, res) => {
       res.send(err);
     }  
   });
-});
-
-//Get a specific article
-app.get('/articles/:id', (req, res) => { 
-  Article.findOne({_id: req.params.id}, function(err, foundArticle) {
-    if(!err) {
-      res.send(foundArticle);
-    }
-    else {
-      res.send(err);
-    }  
-  });
-});
-
-//Post an article
-app.post('/articles', (req, res) => {
+})
+.post((req, res) => {
   const newArticle = Article({
     title: req.body.title,
     content: req.body.content
@@ -65,13 +51,11 @@ app.post('/articles', (req, res) => {
       res.send(err);
     }
   });
-});
-
-//Delete all articles
-app.delete('/articles', (req, res) => {
+})
+.delete((req, res) => {
   Article.deleteMany(function(err){
     if(!err) {
-      res.send("Articles Successfully deleted!");
+      res.send("Articles successfully deleted!");
     }
     else {
       res.send(err);
@@ -79,36 +63,56 @@ app.delete('/articles', (req, res) => {
   });
 });
 
-//Delete a specific article***********
-app.delete('/articles/:id', (req, res) => {
-  Article.findByIdAndRemove({_id: req.params.id}, function(err) {
+//A specific article
+app.route('/articles/:articleTitle')
+.get((req, res) => { 
+  Article.findOne({title: req.params.articleTitle}, function(err, foundArticle) {
     if(!err) {
-      res.send("Article Successfully deleted!");
+      res.send(foundArticle);
     }
     else {
       res.send(err);
-    }
+    }  
   });
-});
-
-//Put a specific article******
-app.put("/articles/:id", async (req, res) => {
-  const { id } = req.params;
-  Article.updateOne({ id }, req.body);
-  const updatedArticle = Article.findById(id);
-  return res.status(200).json(updatedArticle);
-});
-
-//Path a specific article*********
-app.patch('/articles/:id', (req, res) => {
-  Article.findByIdAndUpdate(req.params.id, req.body, {new: true}).then((article) => {
-    if (!article) {
-      return res.status(404).send();
+})
+.put((req, res) => {
+  Article.updateOne(
+    {title: req.params.articleTitle},
+    {title: req.body.title, content:req.body.content},
+    {overwrite: true},
+    function(err) {
+    if(!err) {
+      res.send("Article successfully updated!");
     }
-    res.send(article);
-  }).catch((error) => {
-    res.status(500).send(error);
-  })
+    else {
+      res.send(err);
+    }  
+  });
+})
+.patch((req, res) => {
+  Article.updateOne(
+    {title: req.params.articleTitle},
+    {$set: req.body},
+    function(err) {
+    if(!err) {
+      res.send("Article successfully patched!");
+    }
+    else {
+      res.send(err);
+    }  
+  });
+})
+.delete((req, res) => {
+  Article.deleteOne(
+    {title: req.params.articleTitle},
+    function(err) {
+    if(!err) {
+      res.send("Article successfully deleted!");
+    }
+    else {
+      res.send(err);
+    }  
+  });
 });
 
 app.listen(port, () => {
